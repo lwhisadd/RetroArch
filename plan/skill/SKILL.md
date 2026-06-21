@@ -145,11 +145,11 @@ static int action_ok_playlist_entry_download(const char *path,
    file_transfer_t *transf            = NULL;
 
    if (!playlist)
-      return menu_cbs_exit();
+      return -1;
 
    playlist_get_index(playlist, entry_idx, &entry);
    if (!entry || !entry->download || !*entry->download)
-      return menu_cbs_exit();
+      return -1;
 
    if (g_playlist_download_in_progress)
    {
@@ -157,7 +157,7 @@ static int action_ok_playlist_entry_download(const char *path,
       if (msg)
          runloop_msg_queue_push(msg, strlen(msg), 1, 100, false, NULL,
                MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
-      return menu_cbs_exit();
+      return -1;
    }
 
    parent_dir[0] = '\0';
@@ -173,7 +173,7 @@ static int action_ok_playlist_entry_download(const char *path,
    if (!transf)
    {
       g_playlist_download_in_progress = false;
-      return menu_cbs_exit();
+      return -1;
    }
 
    strlcpy(transf->path, entry->path, sizeof(transf->path));
@@ -185,7 +185,7 @@ static int action_ok_playlist_entry_download(const char *path,
          playlist_entry_download_callback,
          transf);
 
-   return menu_cbs_exit();
+   return 0;
 }
 ```
 
@@ -194,3 +194,17 @@ static int action_ok_playlist_entry_download(const char *path,
 ```c
 {MENU_ENUM_LABEL_PLAYLIST_ENTRY_DOWNLOAD,             action_ok_playlist_entry_download},
 ```
+
+---
+
+## ⚠️ 踩坑記錄與編譯問題檢討 (Troubleshooting & Lessons Learned)
+
+### 1. 連結錯誤：`undefined reference to 'menu_cbs_exit'`
+* **發生原因**：
+  在實作 `action_ok_playlist_entry_download` 時，切勿從測試範例 `plan/skill/examples/playlist_download_example.c` 中直接複製用於模擬 Mock 的 `menu_cbs_exit()` 函數。該模擬函數在真實的 RetroArch 程式碼中並不存在，且實作時若無提供定義，將導致連結階段報錯：
+  ```text
+  undefined reference to `menu_cbs_exit`
+  ```
+* **標準規範 / 修正方式**：
+  RetroArch 的選單按鈕點擊回呼函數（`action_ok_...`）其標準返回值類型為 `int`。
+  應遵循標準規範，在遭遇無效檢查（例如 `!playlist`、`!entry`）或因併發鎖被阻擋時直接返回 **`-1`**，而成功遞交異步背景任務時則返回 **`0`**。不應引入並呼叫未定義的模擬退出常式。
