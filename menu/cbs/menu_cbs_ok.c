@@ -5321,6 +5321,72 @@ static void cb_generic_dir_download(retro_task_t *task,
    }
 }
 
+static bool g_playlist_download_in_progress = false;
+
+static void playlist_entry_download_callback(
+      retro_task_t *task, void *task_data,
+      void *user_data, const char *error)
+{
+   file_transfer_t *transf = (file_transfer_t*)user_data;
+
+   g_playlist_download_in_progress = false;
+
+   if (transf)
+      free(transf);
+}
+
+static int action_ok_playlist_entry_download(const char *path,
+      const char *label, unsigned type, size_t idx, size_t entry_idx)
+{
+   playlist_t *playlist               = playlist_get_cached();
+   const struct playlist_entry *entry = NULL;
+   char parent_dir[PATH_MAX_LENGTH];
+   file_transfer_t *transf            = NULL;
+
+   if (!playlist)
+      return -1;
+
+   playlist_get_index(playlist, entry_idx, &entry);
+   if (!entry || !entry->download || !*entry->download)
+      return -1;
+
+   if (g_playlist_download_in_progress)
+   {
+      const char *msg = msg_hash_to_str(MENU_ENUM_LABEL_VALUE_QT_DOWNLOAD_ALREADY_IN_PROGRESS);
+      if (msg)
+         runloop_msg_queue_push(msg, strlen(msg), 1, 100, false, NULL,
+               MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
+      return -1;
+   }
+
+   parent_dir[0] = '\0';
+   fill_pathname_parent_dir(parent_dir, entry->path, sizeof(parent_dir));
+   if (*parent_dir && !path_is_directory(parent_dir))
+   {
+      path_mkdir(parent_dir);
+   }
+
+   g_playlist_download_in_progress = true;
+
+   transf = (file_transfer_t*)calloc(1, sizeof(*transf));
+   if (!transf)
+   {
+      g_playlist_download_in_progress = false;
+      return -1;
+   }
+
+   strlcpy(transf->path, entry->path, sizeof(transf->path));
+
+   task_push_http_transfer_file(
+         entry->download,
+         false,
+         "GET",
+         playlist_entry_download_callback,
+         transf);
+
+   return 0;
+}
+
 /* expects http_transfer_t*, file_transfer_t* */
 void cb_generic_download(retro_task_t *task,
       void *task_data,
@@ -9606,6 +9672,7 @@ static int menu_cbs_init_bind_ok_compare_label(menu_file_list_cbs_t *cbs,
          {MENU_ENUM_LABEL_CORE_STEAM_INSTALL,                  action_ok_core_steam_install},
          {MENU_ENUM_LABEL_CORE_STEAM_UNINSTALL,                action_ok_core_steam_uninstall},
 #endif
+         {MENU_ENUM_LABEL_PLAYLIST_ENTRY_DOWNLOAD,             action_ok_playlist_entry_download},
          {MENU_ENUM_LABEL_EXPLORE_TAB,                         action_ok_push_default},
          {MENU_ENUM_LABEL_CONTENTLESS_CORES_TAB,               action_ok_push_default},
       };

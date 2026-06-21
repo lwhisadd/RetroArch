@@ -848,6 +848,7 @@
 #define MENU_ENUM_LABEL_SET_CORE_ASSOCIATION_STR "set_core_association"
 #define MENU_ENUM_LABEL_RESET_CORE_ASSOCIATION_STR "reset_core_association"
 #define MENU_ENUM_LABEL_DOWNLOAD_PL_ENTRY_THUMBNAILS_STR "download_pl_entry_thumbnails"
+#define MENU_ENUM_LABEL_PLAYLIST_ENTRY_DOWNLOAD_STR "playlist_entry_download"
 #define MENU_ENUM_LABEL_RUN_STR "collection"
 #define MENU_ENUM_LABEL_RUN_MUSIC_STR "collection_music"
 #define MENU_ENUM_LABEL_SAMBA_ENABLE_STR "samba_enable"

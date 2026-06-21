@@ -144,6 +144,7 @@ struct playlist_entry
    unsigned last_played_second;
    enum playlist_runtime_status runtime_status;
    int thumbnail_flags;
+   char *download; /* 新增：下載連結網址 */
 };
 
 /* Holds all configuration parameters required
