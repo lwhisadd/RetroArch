@@ -5344,11 +5344,11 @@ static int action_ok_playlist_entry_download(const char *path,
    file_transfer_t *transf            = NULL;
 
    if (!playlist)
-      return menu_cbs_exit();
+      return -1;
 
    playlist_get_index(playlist, entry_idx, &entry);
    if (!entry || !entry->download || !*entry->download)
-      return menu_cbs_exit();
+      return -1;
 
    if (g_playlist_download_in_progress)
    {
@@ -5356,7 +5356,7 @@ static int action_ok_playlist_entry_download(const char *path,
       if (msg)
          runloop_msg_queue_push(msg, strlen(msg), 1, 100, false, NULL,
                MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
-      return menu_cbs_exit();
+      return -1;
    }
 
    parent_dir[0] = '\0';
@@ -5372,7 +5372,7 @@ static int action_ok_playlist_entry_download(const char *path,
    if (!transf)
    {
       g_playlist_download_in_progress = false;
-      return menu_cbs_exit();
+      return -1;
    }
 
    strlcpy(transf->path, entry->path, sizeof(transf->path));
@@ -5384,7 +5384,7 @@ static int action_ok_playlist_entry_download(const char *path,
          playlist_entry_download_callback,
          transf);
 
-   return menu_cbs_exit();
+   return 0;
 }
 
 /* expects http_transfer_t*, file_transfer_t* */
