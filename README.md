@@ -17,6 +17,47 @@ These programs are instantiated as dynamic libraries. We refer to these as "libr
 
 ![ozone menu driver](docs/ozone-main-menu.jpg "ozone menu driver")
 
+---
+
+## 🇹🇼 自訂修改摘要（lwhisadd fork）
+
+> 本節記錄此 fork 相對於上游 RetroArch 所做的自訂功能變更。
+
+### PR #1 — Playlist 自訂下載欄位、動態選單 UI 與非同步背景下載任務
+
+**合併日期：** 2026-06-21
+**Commit：** `3d4d537c797af1a9b3a35c89aa4fac609c25a543`
+**狀態：** ✅ 已合併（squash merge），CI 全平台通過
+
+#### 功能說明
+
+| 項目 | 說明 |
+|---|---|
+| `.lpl` 自訂欄位 | 在 RetroArch Playlist（`.lpl`）格式中新增 `download` 自訂欄位，可指定每個遊戲項目的下載來源 URL |
+| 動態水平選單 UI | 實作動態水平渲染的選單介面，根據 playlist 項目動態生成對應的操作選項 |
+| 非同步背景下載 | 使用背景任務（task）架構執行下載，不阻塞主執行緒與 UI，確保使用者體驗流暢 |
+| 多語系在地化 | 新增對應的在地化字串，支援多國語言顯示 |
+| Skill SOP 文件 | 附帶技能標準作業程序（SOP）說明，方便後續維護與擴充 |
+
+#### 變更規模
+
+- **修改檔案：** 43 個
+- **新增行數：** 1,158 行
+- **刪除行數：** 4 行
+- **Commits：** 8 個
+
+#### CI 驗證平台
+
+所有以下平台均通過編譯與測試：
+
+- **Windows：** MSVC 2019/2022（x64 Debug/Release）、MSVC ARM64、UWP、UWP+Angle、MSYS2（MINGW64、UCRT64、CLANG64、CLANGARM64）
+- **Linux：** 標準 build、無選單模式（linux-nomenu）
+- **記憶體安全：** ASan + UBSan headless smoke test
+- **跨架構：** retro_atomic_test（armv7、aarch64）
+- **libretro 子模組：** libretro-common、libretro-db、gfx、tasks samples
+
+---
+
 ## libretro
 
 [libretro](https://www.libretro.com) is an API that exposes generic audio/video/input callbacks.
