@@ -7998,6 +7998,14 @@ MSG_HASH(
    MENU_ENUM_LABEL_VALUE_DOWNLOAD_PL_ENTRY_THUMBNAILS,
    "下載預覽縮圖"
    )
+MSG_HASH(
+   MENU_ENUM_LABEL_VALUE_PLAYLIST_ENTRY_DOWNLOAD,
+   "下載遊戲"
+   )
+MSG_HASH(
+   MENU_ENUM_SUBLABEL_PLAYLIST_ENTRY_DOWNLOAD,
+   "從指定的網址下載遊戲檔案 (ROM)。"
+   )
 
 /* Playlist Item > Set Core Association */
 

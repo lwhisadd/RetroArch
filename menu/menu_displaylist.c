@@ -3901,6 +3901,20 @@ static int menu_displaylist_parse_horizontal_content_actions(
             MENU_ENUM_LABEL_RUN,
             FILE_TYPE_PLAYLIST_ENTRY, 0, idx, NULL);
 
+      {
+         bool has_download = (entry && entry->download && *entry->download);
+         bool file_exists  = (entry && entry->path && *entry->path && path_is_valid(entry->path));
+
+         if (has_download && !file_exists)
+         {
+            menu_entries_append(list,
+                  msg_hash_to_str(MENU_ENUM_LABEL_VALUE_PLAYLIST_ENTRY_DOWNLOAD),
+                  msg_hash_to_str(MENU_ENUM_LABEL_PLAYLIST_ENTRY_DOWNLOAD),
+                  MENU_ENUM_LABEL_PLAYLIST_ENTRY_DOWNLOAD,
+                  FILE_TYPE_PLAYLIST_ENTRY, 0, idx, NULL);
+         }
+      }
+
       if (settings->bools.quick_menu_show_save_load_state)
       {
          bool savestates_enabled     = core_info_current_supports_savestate();

@@ -628,6 +628,8 @@ static void playlist_free_entry(struct playlist_entry *entry)
       string_list_free(entry->subsystem_roms);
    if (entry->path_id)
       playlist_path_id_free(entry->path_id);
+   if (entry->download)
+      free(entry->download);
 
    entry->path               = NULL;
    entry->label              = NULL;
@@ -641,6 +643,7 @@ static void playlist_free_entry(struct playlist_entry *entry)
    entry->last_played_str    = NULL;
    entry->subsystem_roms     = NULL;
    entry->path_id            = NULL;
+   entry->download           = NULL;
    entry->entry_slot         = 0;
    entry->runtime_status     = PLAYLIST_RUNTIME_UNKNOWN;
    entry->runtime_hours      = 0;
@@ -854,6 +857,14 @@ void playlist_update(playlist_t *playlist, size_t idx,
       if (entry->crc32)
          free(entry->crc32);
       entry->crc32       = strdup(update_entry->crc32);
+      playlist->flags   |= CNT_PLAYLIST_FLG_MOD;
+   }
+
+   if (update_entry->download && (update_entry->download != entry->download))
+   {
+      if (entry->download)
+         free(entry->download);
+      entry->download    = strdup(update_entry->download);
       playlist->flags   |= CNT_PLAYLIST_FLG_MOD;
    }
 }
@@ -1463,6 +1474,12 @@ bool playlist_push(playlist_t *playlist,
          playlist->entries[i].db_name     = strdup(entry->db_name);
          entry_updated                    = true;
       }
+      if (     !playlist->entries[i].download
+            && (entry->download && *entry->download))
+      {
+         playlist->entries[i].download    = strdup(entry->download);
+         entry_updated                    = true;
+      }
 
       /* If top entry, we don't want to push a new entry since
        * the top and the entry to be pushed are the same. */
@@ -1517,6 +1534,7 @@ bool playlist_push(playlist_t *playlist,
       playlist->entries[0].last_played_str    = NULL;
       playlist->entries[0].subsystem_roms     = NULL;
       playlist->entries[0].path_id            = NULL;
+      playlist->entries[0].download           = NULL;
       playlist->entries[0].runtime_status     = PLAYLIST_RUNTIME_UNKNOWN;
       playlist->entries[0].runtime_hours      = 0;
       playlist->entries[0].runtime_minutes    = 0;
@@ -1545,6 +1563,8 @@ bool playlist_push(playlist_t *playlist,
          playlist->entries[0].db_name         = strdup(entry->db_name);
       if (entry->crc32 && *entry->crc32)
          playlist->entries[0].crc32           = strdup(entry->crc32);
+      if (entry->download && *entry->download)
+         playlist->entries[0].download        = strdup(entry->download);
       if (entry->subsystem_ident && *entry->subsystem_ident)
          playlist->entries[0].subsystem_ident = strdup(entry->subsystem_ident);
       if (entry->subsystem_name && *entry->subsystem_name)
@@ -1987,6 +2007,16 @@ void playlist_write_file(playlist_t *playlist)
          rjsonwriter_add_string(writer, playlist->entries[i].db_name);
 
          /* Conditional rows must add "," first */
+
+         if (playlist->entries[i].download && *playlist->entries[i].download)
+         {
+            rjsonwriter_raw(writer, ",", 1);
+            rjsonwriter_raw(writer, "\n", 1);
+            rjsonwriter_add_spaces(writer, 6);
+            rjsonwriter_add_string(writer, "download");
+            rjsonwriter_raw(writer, ": ", 2);
+            rjsonwriter_add_string(writer, playlist->entries[i].download);
+         }
 
          /* Typecast required because playlist_entry.entry_slot is unsigned,
           * and 0 and -1 are redundant, but runloop.entry_state_slot is int16_t
@@ -2437,6 +2467,8 @@ static bool JSONObjectMemberHandler(void *context, const char *pValue, size_t le
                case 'd':
                      if (!strcmp(pValue, "db_name"))
                         pCtx->current_string_val = &pCtx->current_entry->db_name;
+                     else if (!strcmp(pValue, "download"))
+                        pCtx->current_string_val = &pCtx->current_entry->download;
                      break;
                case 'e':
                      if (!strcmp(pValue, "entry_slot"))

@@ -9186,6 +9186,14 @@ MSG_HASH(
    MENU_ENUM_SUBLABEL_DOWNLOAD_PL_ENTRY_THUMBNAILS,
    "Download thumbnail images for this content. Updates any existing images."
    )
+MSG_HASH(
+   MENU_ENUM_LABEL_VALUE_PLAYLIST_ENTRY_DOWNLOAD,
+   "Download Game"
+   )
+MSG_HASH(
+   MENU_ENUM_SUBLABEL_PLAYLIST_ENTRY_DOWNLOAD,
+   "Download the game file (ROM) from the specified URL."
+   )
 
 /* Playlist Item > Set Core Association */
 
