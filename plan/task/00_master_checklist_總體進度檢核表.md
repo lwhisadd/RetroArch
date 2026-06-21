@@ -51,3 +51,19 @@ graph TD
   - [ ] 5.2 驗證當檔案已存在時，選單中是否正確隱藏「下載遊戲」選項
   - [ ] 5.3 驗證當父資料夾不存在時，點選下載是否能自動建立資料夾並儲存
   - [ ] 5.4 驗證多工攔截提示是否能正常運作（單一下載限制）
+
+---
+
+## ⚠️ 踩坑記錄與編譯問題檢討 (Troubleshooting & Lessons Learned)
+
+### 1. 連結錯誤：`undefined reference to 'menu_cbs_exit'`
+* **發生原因**：
+  在 `03_menu_cbs_ok_按鈕點擊與背景下載` 階段實作 `action_ok_playlist_entry_download` 時，複製了測試範例 `plan/skill/examples/playlist_download_example.c` 內用於模擬 Mock 的 `menu_cbs_exit()` 呼叫。但該函數在真實的 RetroArch 程式碼中並不存在，且在實作時並未提供相應定義，導致連結時失敗：
+  ```text
+  undefined reference to `menu_cbs_exit`
+  ```
+* **正確做法 / 修正方式**：
+  RetroArch 的選單點擊事件回呼函數（`action_ok_...`）在遇到無效檢查或阻擋時，應遵循標準規範直接返回 `-1`，而成功觸發並發起任務時則返回 `0`。
+  直接移除 `menu_cbs_exit()` 呼叫並替換為整數：
+  - 阻擋/出錯處：`return -1;`
+  - 成功執行處：`return 0;`
